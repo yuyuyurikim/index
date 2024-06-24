@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>학생 점수 계산기</title>
+    <script>
+        const serverUrl = 'http://localhost:3001'; // 서버 URL 설정
+
+        function calculateScore() {
+            let score = 0;
+
+            const sub = parseInt(document.getElementById('sub').value);
+            if (sub >= 7) {
+                score += 30;
+            } else {
+                score += 3 * (sub + 3);
+            }
+
+            const team = parseInt(document.getElementById('team').value);
+            score += (6 - team) * 2;
+
+            const discount = parseInt(document.getElementById('discount').value);
+            if (discount >= 3) {
+                score += 4;
+            } else {
+                score += (5 - discount) * 2;
+            }
+
+            const gender = parseInt(document.getElementById('gender').value);
+            const kick = parseInt(document.getElementById('kick').value);
+
+            if (gender === 1) {
+                if (kick <= 1) {
+                    score += 9 + kick * 3;
+                } else if (kick <= 11) {
+                    score += 15 + Math.floor((kick - 2) / 2) * 3;
+                } else {
+                    score += 30;
+                }
+            } else if (gender === 2) {
+                if (kick >= 8) {
+                    score += 30;
+                } else {
+                    score += 3 * (kick + 3);
+                }
+            }
+
+            document.getElementById('result').innerText = `논술평가를 제외한 당신의 점수는 ${score}점 입니다.\n\n<스포츠 생활>은 3단계(A, B, C)로 산출됩니다.\nA: 80~100점\nB: 60~79점\nC: ~59점\n논술평가 20점이 남았으니, 열심히 수행하시길 바랍니다!`;
+
+            incrementUsageCount(); // 점수 계산 후 사용 횟수 증가
+        }
+
+        function fetchUsageCount() {
+            fetch(`${serverUrl}/usage`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('usageCount').innerText = `이 계산기가 사용된 횟수: ${data.usageCount}`;
+                })
+                .catch(error => console.error('Error fetching usage count:', error));
+        }
+
+        function incrementUsageCount() {
+            fetch(`${serverUrl}/increment`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('usageCount').innerText = `이 계산기가 사용된 횟수: ${data.usageCount}`;
+            })
+            .catch(error => console.error('Error incrementing usage count:', error));
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchUsageCount);
+    </script>
+</head>
+<body>
+    <h1>스포츠 생활(3학년) 점수 계산기</h1>
+    <form id="scoreForm">
+        <label for="sub">탁구 개인 평가(서브)에서 몇 개를 성공했습니까? (아직 평가를 하지 않았다면 0):</label>
+        <input type="number" id="sub" required><br>
+
+        <label for="team">탁구 리그전 평가에서 팀의 순위는? (1~4):</label>
+        <input type="number" id="team" min="1" max="4" required><br>
+
+        <label for="discount">심판, 팀원, 관람자 로써 탁구 규칙 또는 경기 예절에 위배되는 행위를 한 횟수는 몇 번 입니까? (0~n):</label>
+        <input type="number" id="discount" required><br>
+
+        <label for="gender">본인의 성별은? (남자: 1, 여자: 2):</label>
+        <input type="number" id="gender" min="1" max="2" required><br>
+
+        <label for="kick">제기차기를 성공한 횟수는 총 몇 회 입니까? (0~n):</label>
+        <input type="number" id="kick" required><br>
+    </form>
+    <button type="button" onclick="calculateScore()">점수 계산</button>
+    <p id="result"></p>
+    <p id="usageCount">이 계산기가 사용된 횟수: 0</p>
+</body>
+</html>
